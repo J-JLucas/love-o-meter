@@ -35,3 +35,11 @@ body {
   border-radius: 50%;
   overflow: hidden;
 }
+
+.list-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  justify-content: center;
+  text-align: left;
+}
