@@ -6,11 +6,16 @@ const accessToken = await getToken();
 const profile = await fetchProfile(accessToken);
 const topArtists = await fetchTopArtists(accessToken);
 const topTracks = await fetchTopTracks(accessToken);
+const topGenres = getTopGenres(topArtists);
 
 console.log(profile);
+console.log(profile.id);
 console.log(topArtists);
 console.log(topTracks);
+console.log(topGenres);
 
+sendUserToServer(profile, topArtists, topTracks);
+fetchUserFromServer(profile.id);
 populateUI(profile, topArtists, topTracks);
 
 async function fetchProfile(token) {
@@ -45,6 +50,54 @@ async function fetchTopTracks(token) {
 
   return await result.json();
 }
+
+function getTopGenres(topArtists) {
+  const genreMap = new Map();
+
+  for (const artist of topArtists.items) {
+    for (const genre of artist.genres) {
+      if (genreMap.has(genre)) {
+        genreMap.set(genre, genreMap.get(genre) + 1);
+      } else {
+        genreMap.set(genre, 1);
+      }
+    }
+  }
+
+  // Convert map to an array and sort by frequency (descending)
+  const sortedGenres = Array.from(genreMap.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10);
+
+  return sortedGenres;
+}
+
+async function sendUserToServer(profile, topArtists, topTracks) {
+  try {
+    const res = await fetch("http://127.0.0.1:3001/api/insert-user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ profile, topArtists, topTracks }),
+    });
+
+    const data = await res.json();
+    console.log("Server Response:", data);
+  } catch (err) {
+    console.error("Error sending user data:", err);
+  }
+}
+
+async function fetchUserFromServer(userId) {
+  try {
+    const res = await fetch(`http://127.0.0.1:3001/api/get-user/${userId}`);
+    if (!res.ok) throw new Error("User not found");
+    const data = await res.json();
+    console.log("User data:", data);
+  } catch (err) {
+    console.error("Error:", err);
+  }
+}
+
 function populateUI(profile, topArtists, topTracks) {
   document.getElementById("displayName").innerText = profile.display_name;
   document.getElementById("displayName").setAttribute("href", profile.external_urls.spotify);
@@ -62,5 +115,8 @@ function populateUI(profile, topArtists, topTracks) {
   document.getElementById("topTracks").innerHTML = topTracks.items
     .map((a) => `<li>${a.name}</li>`)
     .join("");
-  //document.getElementById("topGenres")
+
+  document.getElementById("topGenres").innerHTML = topGenres
+    .map(([g, _count]) => `<li>${g}</li>`)
+    .join("");
 }

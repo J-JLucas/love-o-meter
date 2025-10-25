@@ -1,6 +1,9 @@
 # enviroment
 .env
 
+# keys
+keys/
+
 # Logs
 logs
 *.log
