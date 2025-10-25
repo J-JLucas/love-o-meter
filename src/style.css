@@ -1,0 +1,37 @@
+/* https://blog.logrocket.com/css-overlay/ */
+
+body {
+  text-align: center;
+}
+
+.vinyl-container {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  max-width: 400px;
+  /*anim def, loop duration, style, duration */
+  animation: spin 4s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+#img-vinyl {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+#avatar img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 35%;
+  height: 35%;
+  border-radius: 50%;
+  overflow: hidden;
+}
