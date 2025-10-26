@@ -1,43 +1,49 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Love-O-Meter</title>
-    <script type="module" src="/src/main.js"></script>
-  </head>
 
-  <body>
-    <h1>Love-O-Meter</h1>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Love-O-Meter</title>
+  <script type="module" src="/src/main.js"></script>
+</head>
 
-    <div class="list-wrapper">
-      <!-- ========================= USER A ========================= -->
-      <div id="userA" class="user-card">
-        <h1><a id="displayName" href="#"></a></h1>
-        <div class="vinyl-container">
-          <img id="img-vinyl" src="./images/vinyl.png" alt="vinyl record" />
-          <span id="avatar"></span>
-        </div>
-        <div class="list-wrapper">
-          <span id="topArtists"></span>
-          <span id="topTracks"></span>
-          <span id="topGenres"></span>
-        </div>
+<body>
+  <h1>Love-O-Meter</h1>
+  <h3>Paste your friend's Spotify profile below:</h3>
+  <input class="search-input" type="text" placeholder="https://open.spotify.com/user/8v4gsg8egujcmhotclybow2dw"></input>
+  <button class="btn">GO!</button>
+
+  <!-- Users -->
+  <div class="list-wrapper">
+    <!-- ========================= USER A ========================= -->
+    <div id="userA" class="user-card">
+      <h1><a class="displayName" href="#"></a></h1>
+      <div class="vinyl-container">
+        <img class="img-vinyl" src="./images/vinyl.png" alt="vinyl record" />
+        <span class="avatar"></span>
       </div>
-
-      <!-- ========================= USER B ========================= -->
-      <div id="userB" class="user-card">
-        <h1><a id="displayName" href="#"></a></h1>
-        <div class="vinyl-container">
-          <img id="img-vinyl" src="./images/vinyl.png" alt="vinyl record" />
-          <span id="avatar"></span>
-        </div>
-        <div class="list-wrapper">
-          <span id="topArtists"></span>
-          <span id="topTracks"></span>
-          <span id="topGenres"></span>
-        </div>
+      <div class="list-wrapper">
+        <span class="topArtists"></span>
+        <span class="topTracks"></span>
+        <span class="topGenres"></span>
       </div>
     </div>
-  </body>
+
+    <!-- ========================= USER B ========================= -->
+    <div id="userB" class="user-card">
+      <h1><a class="displayName" href="#"></a></h1>
+      <div class="vinyl-container">
+        <img class="img-vinyl" src="./images/vinyl.png" alt="vinyl record" />
+        <span class="avatar"></span>
+      </div>
+      <div class="list-wrapper">
+        <span class="topArtists"></span>
+        <span class="topTracks"></span>
+        <span class="topGenres"></span>
+      </div>
+    </div>
+  </div>
+</body>
+
 </html>

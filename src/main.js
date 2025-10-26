@@ -16,7 +16,8 @@ await sendUserToServer(profile, topArtists, topTracks);
 const userDoc = await fetchUserFromServer(profile.id);
 
 if (userDoc) {
-  populateUI(userDoc);
+  populateUser("userA", userDoc);
+  populateUser("userB", userDoc);
 }
 
 async function fetchProfile(token) {
@@ -80,26 +81,27 @@ async function fetchUserFromServer(userId) {
   }
 }
 
-function populateUI(userDocument) {
-  document.getElementById("displayName").innerText = userDocument.username;
-  document.getElementById("displayName").setAttribute("href", userDocument.profileUrl);
+function populateUser(containerId, userDocument) {
+  const root = document.getElementById(containerId);
+  const nameLink = root.querySelector(".displayName");
+  nameLink.innerText = userDocument.username ?? "#";
+  nameLink.setAttribute("href", userDocument.profileUrl);
+
   if (userDocument.profilePic) {
     const profileImage = new Image(200, 200);
     profileImage.src = userDocument.profilePic;
-    document.getElementById("avatar").appendChild(profileImage);
+    root.querySelector(".avatar").appendChild(profileImage);
   }
 
-  document.getElementById("topArtists").innerHTML = (userDocument.topArtists ?? [])
+  root.querySelector(".topArtists").innerHTML = (userDocument.topArtists ?? [])
     .map((a) => `<li>${a.name}</li>`)
     .join("");
 
-  // tracks: same
-  document.getElementById("topTracks").innerHTML = (userDocument.topTracks ?? [])
+  root.querySelector(".topTracks").innerHTML = (userDocument.topTracks ?? [])
     .map((t) => `<li>${t.name}</li>`)
     .join("");
 
-  // genres: array of strings
-  document.getElementById("topGenres").innerHTML = (userDocument.topGenres ?? [])
+  root.querySelector(".topGenres").innerHTML = (userDocument.topGenres ?? [])
     .map((g) => `<li>${g}</li>`)
     .join("");
 }
