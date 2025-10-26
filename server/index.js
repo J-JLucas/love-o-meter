@@ -54,10 +54,11 @@ export async function insertUser(profile, topArtists, topTracks) {
     profilePic: profile.images[0].url,
     topArtists: topArtists.items,
     topTracks: topTracks.items,
+    topGenres: determineTopGenres(topArtists),
   });
 }
 
-export async function getUser(userId) {
+async function getUser(userId) {
   const userRef = db.collection("users").doc(userId);
   const doc = await userRef.get();
   if (!doc.exists) {
@@ -67,4 +68,26 @@ export async function getUser(userId) {
     console.log("User Found!");
     return doc.data();
   }
+}
+
+function determineTopGenres(topArtists) {
+  const genreMap = new Map();
+
+  for (const artist of topArtists.items) {
+    for (const genre of artist.genres) {
+      if (genreMap.has(genre)) {
+        genreMap.set(genre, genreMap.get(genre) + 1);
+      } else {
+        genreMap.set(genre, 1);
+      }
+    }
+  }
+
+  // Convert map to an array and sort by frequency (descending)
+  const sortedGenres = Array.from(genreMap.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([genre]) => genre);
+
+  return sortedGenres;
 }

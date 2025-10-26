@@ -9,6 +9,16 @@ body {
   color: white;
 }
 
+.lom__grid {
+  display: grid;
+  gap: var(--gap);
+  grid-template-columns: 1fr minmax(260px, 320px) 1fr;
+  grid-template-areas:
+    "ua     score  ub"
+    "ua-art ua-trk ua-gen"
+    "ub-art ub-trk ub-gen";
+}
+
 .vinyl-container {
   position: relative;
   display: inline-block;

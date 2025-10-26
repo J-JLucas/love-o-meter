@@ -6,17 +6,18 @@ const accessToken = await getToken();
 const profile = await fetchProfile(accessToken);
 const topArtists = await fetchTopArtists(accessToken);
 const topTracks = await fetchTopTracks(accessToken);
-const topGenres = getTopGenres(topArtists);
 
 console.log(profile);
 console.log(profile.id);
 console.log(topArtists);
 console.log(topTracks);
-console.log(topGenres);
 
-sendUserToServer(profile, topArtists, topTracks);
-fetchUserFromServer(profile.id);
-populateUI(profile, topArtists, topTracks);
+await sendUserToServer(profile, topArtists, topTracks);
+const userDoc = await fetchUserFromServer(profile.id);
+
+if (userDoc) {
+  populateUI(userDoc);
+}
 
 async function fetchProfile(token) {
   const result = await fetch("https://api.spotify.com/v1/me", {
@@ -51,27 +52,6 @@ async function fetchTopTracks(token) {
   return await result.json();
 }
 
-function getTopGenres(topArtists) {
-  const genreMap = new Map();
-
-  for (const artist of topArtists.items) {
-    for (const genre of artist.genres) {
-      if (genreMap.has(genre)) {
-        genreMap.set(genre, genreMap.get(genre) + 1);
-      } else {
-        genreMap.set(genre, 1);
-      }
-    }
-  }
-
-  // Convert map to an array and sort by frequency (descending)
-  const sortedGenres = Array.from(genreMap.entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10);
-
-  return sortedGenres;
-}
-
 async function sendUserToServer(profile, topArtists, topTracks) {
   try {
     const res = await fetch("http://127.0.0.1:3001/api/insert-user", {
@@ -93,30 +73,33 @@ async function fetchUserFromServer(userId) {
     if (!res.ok) throw new Error("User not found");
     const data = await res.json();
     console.log("User data:", data);
+    return data;
   } catch (err) {
     console.error("Error:", err);
+    return null;
   }
 }
 
-function populateUI(profile, topArtists, topTracks) {
-  document.getElementById("displayName").innerText = profile.display_name;
-  document.getElementById("displayName").setAttribute("href", profile.external_urls.spotify);
-  if (profile.images[0]) {
+function populateUI(userDocument) {
+  document.getElementById("displayName").innerText = userDocument.username;
+  document.getElementById("displayName").setAttribute("href", userDocument.profileUrl);
+  if (userDocument.profilePic) {
     const profileImage = new Image(200, 200);
-    profileImage.src = profile.images[0].url;
+    profileImage.src = userDocument.profilePic;
     document.getElementById("avatar").appendChild(profileImage);
   }
 
-  //document.getElementById("topArtists").innerText = topArtists.
-  document.getElementById("topArtists").innerHTML = topArtists.items
+  document.getElementById("topArtists").innerHTML = (userDocument.topArtists ?? [])
     .map((a) => `<li>${a.name}</li>`)
     .join("");
 
-  document.getElementById("topTracks").innerHTML = topTracks.items
-    .map((a) => `<li>${a.name}</li>`)
+  // tracks: same
+  document.getElementById("topTracks").innerHTML = (userDocument.topTracks ?? [])
+    .map((t) => `<li>${t.name}</li>`)
     .join("");
 
-  document.getElementById("topGenres").innerHTML = topGenres
-    .map(([g, _count]) => `<li>${g}</li>`)
+  // genres: array of strings
+  document.getElementById("topGenres").innerHTML = (userDocument.topGenres ?? [])
+    .map((g) => `<li>${g}</li>`)
     .join("");
 }
