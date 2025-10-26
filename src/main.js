@@ -17,8 +17,17 @@ const userDoc = await fetchUserFromServer(profile.id);
 
 if (userDoc) {
   populateUser("userA", userDoc);
-  populateUser("userB", userDoc);
 }
+
+document.getElementById("searchBtn").addEventListener("click", async () => {
+  console.log("Search User Clicked");
+  const userDoc = await fetchUserFromServer("voolavyj8h0cd260dvuzts00q");
+
+  if (!userDoc) {
+    return;
+  }
+  populateUser("userB", userDoc);
+});
 
 async function fetchProfile(token) {
   const result = await fetch("https://api.spotify.com/v1/me", {

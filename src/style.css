@@ -27,6 +27,14 @@ body {
   padding: 6px 8px;
   margin-left: 6px;
   margin-right: 6px;
+  font-weight: bold;
+}
+
+#comp-card {
+  width: 400px;
+  height: 425px;
+  margin-top: 10px;
+  background-color: #3b3b3b;
 }
 
 .vinyl-container {
@@ -35,7 +43,7 @@ body {
   width: 100%;
   max-width: 400px;
   /*anim def, loop duration, style, duration */
-  animation: spin 4s linear infinite;
+  animation: spin 3s linear infinite;
 }
 
 @keyframes spin {
@@ -68,4 +76,5 @@ body {
   padding-top: 20px;
   justify-content: center;
   text-align: center;
+  font-size: 12px;
 }
