@@ -21,9 +21,28 @@ if (userDoc) {
 
 document.getElementById("searchBtn").addEventListener("click", async () => {
   console.log("Search User Clicked");
-  const userDoc = await fetchUserFromServer("voolavyj8h0cd260dvuzts00q");
+
+  // grab url from input box
+  const input = document.querySelector(".search-input");
+  const profileUrl = input.value.trim();
+
+  if (!profileUrl) {
+    console.warn("No Url entered");
+    return;
+  }
+
+  // strip spotify id #
+  const match = profileUrl.match(/user\/([a-zA-Z0-9]+)/);
+  if (!match) {
+    console.error("Invalid spotify URL");
+  }
+
+  const userId = match[1];
+  console.log("Parsed ID: ", userId);
+  const userDoc = await fetchUserFromServer(userId);
 
   if (!userDoc) {
+    console.warn("User not found on server!");
     return;
   }
   populateUser("userB", userDoc);

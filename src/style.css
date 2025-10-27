@@ -2,6 +2,7 @@
 
 body {
   text-align: center;
+  text-shadow: 0 0 4px black;
   background-image: linear-gradient(to bottom, #1ac055, black);
   background-repeat: no-repeat;
   background-attachment: fixed;
