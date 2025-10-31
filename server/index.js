@@ -46,6 +46,22 @@ app.get("/api/get-user/:id", async (req, res) => {
   }
 });
 
+app.get("/api/get-love-score/:idA/:idB", async (req, res) => {
+  try {
+    // calculate love score
+    var loveObj = {
+      score: 69,
+      genre: "Metal",
+      artists: "Opeth",
+      anthem: "Karma",
+    };
+    return res.json(loveObj);
+  } catch (err) {
+    console.error("Error Calculating Love Score:", err);
+    res.status(500).json({ error: "FAILED" });
+  }
+});
+
 export async function insertUser(profile, topArtists, topTracks) {
   const docRef = db.collection("users").doc(profile.id);
   await docRef.set({

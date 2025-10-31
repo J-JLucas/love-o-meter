@@ -4,8 +4,8 @@ import { getToken } from "./spotifyAuth.js";
 const accessToken = await getToken();
 
 const profile = await fetchProfile(accessToken);
-const topArtists = await fetchTopArtists(accessToken);
-const topTracks = await fetchTopTracks(accessToken);
+const topArtists = await fetchTopArtists(accessToken, "long_term");
+const topTracks = await fetchTopTracks(accessToken, "short_term");
 
 console.log(profile);
 console.log(profile.id);
@@ -13,10 +13,12 @@ console.log(topArtists);
 console.log(topTracks);
 
 await sendUserToServer(profile, topArtists, topTracks);
-const userDoc = await fetchUserFromServer(profile.id);
 
-if (userDoc) {
-  populateUser("userA", userDoc);
+const userA = await fetchUserFromServer(profile.id);
+var userB = undefined;
+
+if (userA) {
+  populateUser("userA", userA);
 }
 
 document.getElementById("searchBtn").addEventListener("click", async () => {
@@ -35,18 +37,32 @@ document.getElementById("searchBtn").addEventListener("click", async () => {
   const match = profileUrl.match(/user\/([a-zA-Z0-9]+)/);
   if (!match) {
     console.error("Invalid spotify URL");
+    return;
   }
 
+  // Query DB
   const userId = match[1];
   console.log("Parsed ID: ", userId);
-  const userDoc = await fetchUserFromServer(userId);
+  userB = await fetchUserFromServer(userId);
 
-  if (!userDoc) {
+  if (!userB) {
     console.warn("User not found on server!");
     return;
   }
-  populateUser("userB", userDoc);
+  populateUser("userB", userB);
+  populateLoveScore();
 });
+
+async function populateLoveScore() {
+  const loveObj = await getLoveScoreFromServer(userA, userB);
+
+  const root = document.getElementById("comp-card");
+  root.querySelector(".loveScore").innerText = loveObj.score;
+  root.querySelector(".loveGenre").innerText = loveObj.genre;
+  root.querySelector(".loveArtists").innerText = loveObj.artists;
+  root.querySelector(".loveAnthem").innerText = loveObj.anthem;
+  return;
+}
 
 async function fetchProfile(token) {
   const result = await fetch("https://api.spotify.com/v1/me", {
@@ -57,9 +73,9 @@ async function fetchProfile(token) {
   return await result.json();
 }
 
-async function fetchTopArtists(token) {
+async function fetchTopArtists(token, term_length) {
   const result = await fetch(
-    "https://api.spotify.com/v1/me/top/artists?time_range=medium_term&limit=10&offset=0",
+    `https://api.spotify.com/v1/me/top/artists?time_range=${term_length}&limit=50&offset=0`,
     {
       method: "GET",
       headers: { Authorization: `Bearer ${token}` },
@@ -69,9 +85,9 @@ async function fetchTopArtists(token) {
   return await result.json();
 }
 
-async function fetchTopTracks(token) {
+async function fetchTopTracks(token, term_length) {
   const result = await fetch(
-    "https://api.spotify.com/v1/me/top/tracks?time_range=medium_term&limit=10&offset=0",
+    `https://api.spotify.com/v1/me/top/tracks?time_range=${term_length}&limit=10&offset=0`,
     {
       method: "GET",
       headers: { Authorization: `Bearer ${token}` },
@@ -79,6 +95,19 @@ async function fetchTopTracks(token) {
   );
 
   return await result.json();
+}
+
+async function getLoveScoreFromServer(idA, idB) {
+  try {
+    const res = await fetch(`http://127.0.0.1:3001/api/get-love-score/${idA}/${idB}`);
+    if (!res.ok) throw new Error("User(s)? not found");
+    const data = await res.json();
+    console.log("Love data:", data);
+    return data;
+  } catch (err) {
+    console.error("Error:", err);
+    return null;
+  }
 }
 
 async function sendUserToServer(profile, topArtists, topTracks) {
@@ -122,14 +151,21 @@ function populateUser(containerId, userDocument) {
   }
 
   root.querySelector(".topArtists").innerHTML = (userDocument.topArtists ?? [])
+    .slice(0, 10)
     .map((a) => `<li>${a.name}</li>`)
     .join("");
 
   root.querySelector(".topTracks").innerHTML = (userDocument.topTracks ?? [])
-    .map((t) => `<li>${t.name}</li>`)
+    .slice(0, 10)
+    .map((t) => {
+      const title = t.name.length > 40 ? t.name.slice(0, 25) + "…" : t.name;
+      const artist = t.artists?.[0]?.name ?? "Unknown Artist";
+      return `<li>${title} - ${artist}</li>`;
+    })
     .join("");
 
   root.querySelector(".topGenres").innerHTML = (userDocument.topGenres ?? [])
+    .slice(0, 10)
     .map((g) => `<li>${g}</li>`)
     .join("");
 }
