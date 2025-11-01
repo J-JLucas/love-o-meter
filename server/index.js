@@ -12,6 +12,7 @@ const serviceAccount = require("../keys/serviceAccountKey.json");
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.json({ limit: "64mb" }));
 
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
 
@@ -46,15 +47,16 @@ app.get("/api/get-user/:id", async (req, res) => {
   }
 });
 
-app.get("/api/get-love-score/:idA/:idB", async (req, res) => {
+app.post("/api/get-love-score", async (req, res) => {
   try {
-    // calculate love score
-    var loveObj = {
-      score: 69,
-      genre: "Metal",
-      artists: "Opeth",
-      anthem: "Karma",
-    };
+    const { userA, userB } = req.body || {};
+
+    if (!userA || !userB) {
+      return res.status(400).json({ error: "Missing user docs" });
+    }
+
+    const loveObj = calculateLoveScore(userA, userB);
+    console.log("Got POST /api/get-love-score ✅");
     return res.json(loveObj);
   } catch (err) {
     console.error("Error Calculating Love Score:", err);
@@ -64,32 +66,31 @@ app.get("/api/get-love-score/:idA/:idB", async (req, res) => {
 
 export async function insertUser(profile, topArtists, topTracks) {
   const docRef = db.collection("users").doc(profile.id);
+
+  const artists = topArtists.items.map((artist) => ({
+    name: artist.name,
+    genres: artist.genres,
+  }));
+
+  const tracks = topTracks.items.map((track) => ({
+    title: track.name,
+    artist: track.artists?.[0]?.name ?? "Unknown Artists",
+  }));
+
   await docRef.set({
     username: profile.display_name,
     profileUrl: profile.external_urls.spotify,
     profilePic: profile.images[0].url,
-    topArtists: topArtists.items,
-    topTracks: topTracks.items,
-    topGenres: determineTopGenres(topArtists),
+    topArtists: artists,
+    topTracks: tracks,
+    topGenres: determineTopGenres(artists),
   });
-}
-
-async function getUser(userId) {
-  const userRef = db.collection("users").doc(userId);
-  const doc = await userRef.get();
-  if (!doc.exists) {
-    console.log("User Does Not Exist!");
-    return null;
-  } else {
-    console.log("User Found!");
-    return doc.data();
-  }
 }
 
 function determineTopGenres(topArtists) {
   const genreMap = new Map();
 
-  for (const artist of topArtists.items) {
+  for (const artist of topArtists) {
     for (const genre of artist.genres) {
       if (genreMap.has(genre)) {
         genreMap.set(genre, genreMap.get(genre) + 1);
@@ -106,4 +107,40 @@ function determineTopGenres(topArtists) {
     .map(([genre]) => genre);
 
   return sortedGenres;
+}
+
+async function getUser(userId) {
+  const userRef = db.collection("users").doc(userId);
+  const doc = await userRef.get();
+  if (!doc.exists) {
+    console.log("User Does Not Exist!");
+    return null;
+  } else {
+    console.log("User Found!");
+    return doc.data();
+  }
+}
+
+function calculateLoveScore(userA, userB) {
+  const loveGenre =
+    (userA?.topGenres ?? []).find((g) => (userB?.topGenres ?? []).includes(g)) ??
+    "No Love Genre :(";
+
+  const loveAnthem =
+    (userA?.topTracks ?? []).find((g) => (userB?.topTracks ?? []).includes(g)) ??
+    "No Love Anthem :(";
+
+  const artistsA = new Set((userA?.topArtists ?? []).map((a) => a.name));
+  const artistsB = new Set((userB?.topArtists ?? []).map((a) => a.name));
+
+  //compute intersect
+  const mutualArtists = [...artistsA].filter((name) => artistsB.has(name));
+
+  var loveObj = {
+    score: 69,
+    genre: loveGenre,
+    artists: mutualArtists.length > 0 ? mutualArtists.join(", ") : "No Mutual Artists :(",
+    anthem: loveAnthem,
+  };
+  return loveObj;
 }

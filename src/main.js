@@ -87,7 +87,7 @@ async function fetchTopArtists(token, term_length) {
 
 async function fetchTopTracks(token, term_length) {
   const result = await fetch(
-    `https://api.spotify.com/v1/me/top/tracks?time_range=${term_length}&limit=10&offset=0`,
+    `https://api.spotify.com/v1/me/top/tracks?time_range=${term_length}&limit=15&offset=0`,
     {
       method: "GET",
       headers: { Authorization: `Bearer ${token}` },
@@ -97,10 +97,15 @@ async function fetchTopTracks(token, term_length) {
   return await result.json();
 }
 
-async function getLoveScoreFromServer(idA, idB) {
+async function getLoveScoreFromServer(userA, userB) {
   try {
-    const res = await fetch(`http://127.0.0.1:3001/api/get-love-score/${idA}/${idB}`);
-    if (!res.ok) throw new Error("User(s)? not found");
+    const res = await fetch("http://127.0.0.1:3001/api/get-love-score", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userA, userB }),
+    });
+
+    if (!res.ok) throw new Error(`Server error ${res.status}`);
     const data = await res.json();
     console.log("Love data:", data);
     return data;
@@ -140,9 +145,8 @@ async function fetchUserFromServer(userId) {
 
 function populateUser(containerId, userDocument) {
   const root = document.getElementById(containerId);
-  const nameLink = root.querySelector(".displayName");
-  nameLink.innerText = userDocument.username ?? "#";
-  nameLink.setAttribute("href", userDocument.profileUrl);
+  root.querySelector(".displayName").innerText = userDocument.username ?? "#";
+  root.querySelector(".displayName").setAttribute("href", userDocument.profileUrl);
 
   if (userDocument.profilePic) {
     const profileImage = new Image(200, 200);
@@ -158,8 +162,8 @@ function populateUser(containerId, userDocument) {
   root.querySelector(".topTracks").innerHTML = (userDocument.topTracks ?? [])
     .slice(0, 10)
     .map((t) => {
-      const title = t.name.length > 40 ? t.name.slice(0, 25) + "…" : t.name;
-      const artist = t.artists?.[0]?.name ?? "Unknown Artist";
+      const title = t.title.length > 40 ? t.title.slice(0, 25) + "…" : t.title;
+      const artist = t.artist;
       return `<li>${title} - ${artist}</li>`;
     })
     .join("");
